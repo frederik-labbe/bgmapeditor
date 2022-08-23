@@ -194,10 +194,10 @@ sub to_img {
 	
 	switch ($tile_bg) {
 		case "white" {
-			$plan->fill(50, 50, $white);
+			$plan->fill(0, 0, $white);
 		}
 		case "black" {
-			$plan->fill(50, 50, $black);
+			$plan->fill(0, 0, $black);
 		}
 	}
 		
