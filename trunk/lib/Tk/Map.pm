@@ -120,7 +120,7 @@ sub from_string {
 #=================================================================================#
 
 sub to_img {
-	my ($canvas, $format) = @_;
+	my ($canvas, $format, $tile_bg) = @_;
 	my $tilepath = $canvas->cget("-tilepath");
 	my @items = $canvas->to_string();
 	return "" unless @items;
@@ -188,6 +188,18 @@ sub to_img {
 	}
 	
 	$plan->alphaBlending(1);
+	
+	my $black = $plan->colorAllocate(0,0,0);
+	my $white = $plan->colorAllocate(255,255,255);
+	
+	switch ($tile_bg) {
+		case "white" {
+			$plan->fill(50, 50, $white);
+		}
+		case "black" {
+			$plan->fill(50, 50, $black);
+		}
+	}
 		
 	foreach (@toCopy) {
 		# on adapte la position en fonction des dimensions de l'image finale
@@ -201,8 +213,8 @@ sub to_img {
 		my @args = @$_;
 		$args[1] -= $clip[0];
 		$args[2] -= $clip[1]-9; # on doit rajouter la hauteur de la police
-		my $black = $plan->colorAllocate(0,0,0);
-		my @b = $plan->stringFT($black,"$tilepath/../../fonts/FreeSans.ttf",9,0,$args[1],$args[2],$args[0]);
+		my $text_color = ($tile_bg eq "black") ? $white : $black;
+		my @b = $plan->stringFT($text_color,"$tilepath/../../fonts/FreeSans.ttf",9,0,$args[1],$args[2],$args[0]);
 	}
 	
 	return $plan->$format();

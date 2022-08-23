@@ -41,6 +41,7 @@ use Tk::PNG;
 use Tk::ItemStyle;
 use Tk::Balloon;
 use Tk::Button;
+use Tk::Radiobutton;
 use Tk::Dialog;
 use Tk::Adjuster;
 use Tk::TextUndo;
@@ -438,7 +439,7 @@ sub command_convert_map
 		-defaultextension => ".png"	
 	);
 	&msg($lang{'i_saving'} . " $file... ");
-	$editor->file_write_as_img($file);
+	$editor->file_write_as_img($file, $cfg{tile_bg});
 	&msg($lang{"i_done"} . " [". localtime() ."]", 1);
 }
 

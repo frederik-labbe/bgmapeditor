@@ -187,9 +187,9 @@ sub file_write
 sub file_write_as_img 
 #=====================================================#
 {
-	my ($w, $file) = @_;
+	my ($w, $file, $tile_bg) = @_;
 	return 0 unless $file;
-	$w->file_write($file, $w->get_map->to_img("png"), 1)
+	$w->file_write($file, $w->get_map->to_img("png", $tile_bg), 1)
 }
 
 
