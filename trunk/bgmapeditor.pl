@@ -41,7 +41,6 @@ use Tk::PNG;
 use Tk::ItemStyle;
 use Tk::Balloon;
 use Tk::Button;
-use Tk::Radiobutton;
 use Tk::Dialog;
 use Tk::Adjuster;
 use Tk::TextUndo;
