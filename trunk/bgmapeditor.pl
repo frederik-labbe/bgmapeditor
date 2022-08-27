@@ -138,7 +138,7 @@ my @recents;
 my $recentslimit = $cfg{recents_limit};
 
 # templates
-opendir my $templatesdir, $execpath."templates";
+opendir my $templatesdir, "$templatespath";
 my @templates = grep /\.map$/, readdir $templatesdir;
 closedir $templatesdir;
 
@@ -148,11 +148,11 @@ my $is_template = 0;
 
 my $menubar = $main->Menu(-type => 'menubar', -relief => 'fl');
 $main->configure(-menu => $menubar);
-
-my $recentsmenu = $menubar->Menu(-tearoff => 0);
 	
 $menubar = $main->Menu(-type => 'menubar', -relief => 'fl');
 $main->configure(-menu => $menubar);
+
+my $recentsmenu = $menubar->Menu(-tearoff => 0);
 
 $menubar->Cascade(-label => $lang{m_file}, -menuitems =>
 	[
