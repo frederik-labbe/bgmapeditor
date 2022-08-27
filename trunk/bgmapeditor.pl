@@ -148,9 +148,6 @@ my $is_template = 0;
 
 my $menubar = $main->Menu(-type => 'menubar', -relief => 'fl');
 $main->configure(-menu => $menubar);
-	
-$menubar = $main->Menu(-type => 'menubar', -relief => 'fl');
-$main->configure(-menu => $menubar);
 
 my $recentsmenu = $menubar->Menu(-tearoff => 0);
 
@@ -178,7 +175,7 @@ $menubar->Cascade(-label => $lang{m_file}, -menuitems =>
 			-compound => "left",
 			-menuitems => @templates ?
 			[
-				map { [Button => $_, -command => [sub { &command_open_file }, $execpath."templates/".$_, 1] ] } @templates
+				map { [Button => $_, -command => [sub { &command_open_file }, "$templatespath".$_, 1] ] } @templates
 			] : []
 		],
 		[Separator => ''],
