@@ -75,6 +75,7 @@ my $tilepath = "$imgpath/tiles";
 my $uiimgpath = "$imgpath/ui";
 my $configfile = "$execpath"."bgmapeditor.cfg";
 my $recentsfile = "$execpath"."recents.lst";
+my $templatespath = "$execpath"."templates";
 my $langpath = "$execpath"."lang";
 
 #==================================================================================#
@@ -134,184 +135,210 @@ foreach (@uiimages) {
 	$ui{$_} = $tkimage; 
 } 
 
+# recent files
 my @recents = RecentsList::load($recentsfile);
-display_menu();
 
-#==================================================================================#
-# Menu
+# templates
+opendir my $templatesdir, $execpath."templates";
+my @templates = grep /\.map$/, readdir $templatesdir;
+closedir $templatesdir;
 
-sub display_menu {
-	my $menubar = $main->Menu(-type => 'menubar', -relief => 'fl');
-	$main->configure(-menu => $menubar);
+my $is_template = 0;
 
-	$menubar->Cascade(-label => $lang{m_file}, -menuitems =>
-		[
-			[Button => $lang{m_new}, 
-				-command => sub {	&command_new_tab() },
-				-image => $ui{"filenew.png"},
-				-accelerator => 'Control-n',
-				-compound => "left",
-			],
-			[Button => $lang{m_open}, 
-				-command => sub {	&command_open_map },
-				-image => $ui{"fileopen.png"},
-				-accelerator => 'Control-o',
-				-compound => "left",
-			],
-			[Cascade => "Recents",
-				-command => sub {	&command_show_recents },
-				-image => $ui{"fileopen.png"},
-				-compound => "left",
-				-menuitems => @recents ?
-				[
-					map { [Button => $_, -command => [sub { &command_open_file }, $_] ] } @recents
-				] : []
-			],
-			[Separator => ''],
-			[Button => $lang{m_save}, 
-				-command => sub {	&command_save_map },
-				-image => $ui{"filesave.png"},
-				-accelerator => 'Control-s',
-				-compound => "left",
-			],
-			[Button => $lang{m_save_all}, 
-				-command => sub {	&command_save_all },
-				-image => $ui{"save_all.png"},
-				-accelerator => 'Control-s',
-				-compound => "left",
-			],
-			[Button => $lang{m_saveas}, 
-				-command => sub {	&command_saveas_map },
-				-image => $ui{"filesaveas.png"},
-				-accelerator => 'Control-Shift-s',
-				-compound => "left",
-			],
-			[Button => $lang{m_convertPNG}, 
-				-command => sub {	&command_convert_map },
-				-image => $ui{"thumbnail.png"},
-				-accelerator => 'Control-p',
-				-compound => "left",
-			],
-			[Separator => ''],
-			[Button => $lang{m_close_tab}, 
-				-command => sub { &command_close_tab },
-				-image => $ui{"tab_remove.png"},
-				-accelerator => 'Control-w',
-				-compound => "left",
-			],
-			[Button => $lang{m_quit}, 
-				-command => sub { $main->destroy },
-				-image => $ui{"exit.png"},
-				-accelerator => 'Alt-F4',
-				-compound => "left",
-			],
-		]
-	);
+# menu
 
-	$menubar->Cascade(-label => $lang{m_edit}, -menuitems =>
-		[
-			[Button => $lang{m_undo}, 
-				-command => sub {$tabber->raised_widget->get_map->undo_undo},
-				-image => $ui{"undo.png"},
-				-accelerator => 'Control-z',
-				-compound => "left",
-			],
-			[Button => $lang{m_redo}, 
-				-command => sub {$tabber->raised_widget->get_map->undo_redo},
-				-image => $ui{"redo.png"},
-				-accelerator => 'Control-y',
-				-compound => "left",
-			],
-			[Separator => ''],
-			[Button => $lang{m_insert}, 
-				-command => sub {&command_add_tile},
-				-image => $ui{"editpaste.png"},
-				-accelerator => 'n',
-				-compound => "left",
-			],
-			[Button => $lang{m_drag}, 
-				-command => sub {&command_drag_map},
-				-image => $ui{"view_fullscreen.png"},
-				-accelerator => 'h',
-				-compound => "left",
-			],
-			[Button => $lang{m_move}, 
-				-command => sub {&command_move_tile},
-				-image => $ui{"move.png"},
-				-accelerator => 'Space',
-				-compound => "left",
-			],
-			[Button => $lang{m_rotate}, 
-				-command => sub {&command_rotate_tile},
-				-image => $ui{"rotate_cw.png"},
-				-accelerator => 'r',
-				-compound => "left",
-			],
-			
-			[Button => $lang{m_delete}, 
-				-command => sub {&command_delete_tile},
-				-image => $ui{"no.png"},
-				-accelerator => 'd',
-				-compound => "left",
-			],
-			[Button => $lang{m_text}, 
-				-command => sub {&command_text},
-				-image => $ui{"fonts.png"},
-				-accelerator => 't',
-				-compound => "left",
-			],
-		]
-	);
+my $menubar = $main->Menu(-type => 'menubar', -relief => 'fl');
+$main->configure(-menu => $menubar);
 
-	$menubar->Cascade(-label => $lang{m_packs}, -menuitems =>
-		[
-			[Button => $lang{m_add}, 
-				-command => sub {	&command_add_package },
-				-image => $ui{"edit_add.png"},
-				-accelerator => 'Control-a',
-				-compound => "left",
-			],
-			[Button => $lang{m_delete}, 
-				-command => sub { &command_delete_package() },
-				-image => $ui{"edit_remove.png"},
-				-accelerator => 'Control-d',
-				-compound => "left",
-			],
-		]
-	);
+my $recentsmenu = $menubar->Menu(-tearoff => 0);
+	
+$menubar = $main->Menu(-type => 'menubar', -relief => 'fl');
+$main->configure(-menu => $menubar);
 
-	$menubar->Separator();
+$menubar->Cascade(-label => $lang{m_file}, -menuitems =>
+	[
+		[Button => $lang{m_new}, 
+			-command => sub {	&command_new_tab() },
+			-image => $ui{"filenew.png"},
+			-accelerator => 'Control-n',
+			-compound => "left",
+		],
+		[Button => $lang{m_open}, 
+			-command => sub {	&command_open_map },
+			-image => $ui{"fileopen.png"},
+			-accelerator => 'Control-o',
+			-compound => "left",
+		],
+		[Cascade => "Recents",
+			-image => $ui{"fileopen.png"},
+			-compound => "left",
+			-menu => $recentsmenu
+		],
+		[Cascade => "Templates",
+			-image => $ui{"fileopen.png"},
+			-compound => "left",
+			-menuitems => @templates ?
+			[
+				map { [Button => $_, -command => [sub { &command_open_file }, $execpath."templates/".$_, 1] ] } @templates
+			] : []
+		],
+		[Separator => ''],
+		[Button => $lang{m_save}, 
+			-command => sub {	&command_save_map },
+			-image => $ui{"filesave.png"},
+			-accelerator => 'Control-s',
+			-compound => "left",
+		],
+		[Button => $lang{m_save_all}, 
+			-command => sub {	&command_save_all },
+			-image => $ui{"save_all.png"},
+			-accelerator => 'Control-s',
+			-compound => "left",
+		],
+		[Button => $lang{m_saveas}, 
+			-command => sub {	&command_saveas_map },
+			-image => $ui{"filesaveas.png"},
+			-accelerator => 'Control-Shift-s',
+			-compound => "left",
+		],
+		[Button => $lang{m_convertPNG}, 
+			-command => sub {	&command_convert_map },
+			-image => $ui{"thumbnail.png"},
+			-accelerator => 'Control-p',
+			-compound => "left",
+		],
+		[Separator => ''],
+		[Button => $lang{m_close_tab}, 
+			-command => sub { &command_close_tab },
+			-image => $ui{"tab_remove.png"},
+			-accelerator => 'Control-w',
+			-compound => "left",
+		],
+		[Button => $lang{m_quit}, 
+			-command => sub { $main->destroy },
+			-image => $ui{"exit.png"},
+			-accelerator => 'Alt-F4',
+			-compound => "left",
+		],
+	]
+);
 
-	$menubar->Cascade(-label => $lang{m_help}, -menuitems =>
-		[
-			[Button => $lang{m_manual}, 
-				-command => sub { 
-					&command_prompt(
-					-text => $lang{i_manual}
-					)
-				},
-				-image => $ui{"help.png"},
-				-hidemargin => 1,
-				-compound => "left",
-			],
-			[Button => $lang{m_about}, 
-				-command => sub { 
-					&command_prompt(
-						-text => $lang{i_about}
-						
-					) 
-				},
-				-image => $ui{"messagebox_info.png"},
-				-compound => "left",
-			],
-		]
-	);
-}
+$menubar->Cascade(-label => $lang{m_edit}, -menuitems =>
+	[
+		[Button => $lang{m_undo}, 
+			-command => sub {$tabber->raised_widget->get_map->undo_undo},
+			-image => $ui{"undo.png"},
+			-accelerator => 'Control-z',
+			-compound => "left",
+		],
+		[Button => $lang{m_redo}, 
+			-command => sub {$tabber->raised_widget->get_map->undo_redo},
+			-image => $ui{"redo.png"},
+			-accelerator => 'Control-y',
+			-compound => "left",
+		],
+		[Separator => ''],
+		[Button => $lang{m_insert}, 
+			-command => sub {&command_add_tile},
+			-image => $ui{"editpaste.png"},
+			-accelerator => 'n',
+			-compound => "left",
+		],
+		[Button => $lang{m_drag}, 
+			-command => sub {&command_drag_map},
+			-image => $ui{"view_fullscreen.png"},
+			-accelerator => 'h',
+			-compound => "left",
+		],
+		[Button => $lang{m_move}, 
+			-command => sub {&command_move_tile},
+			-image => $ui{"move.png"},
+			-accelerator => 'Space',
+			-compound => "left",
+		],
+		[Button => $lang{m_rotate}, 
+			-command => sub {&command_rotate_tile},
+			-image => $ui{"rotate_cw.png"},
+			-accelerator => 'r',
+			-compound => "left",
+		],
+		
+		[Button => $lang{m_delete}, 
+			-command => sub {&command_delete_tile},
+			-image => $ui{"no.png"},
+			-accelerator => 'd',
+			-compound => "left",
+		],
+		[Button => $lang{m_text}, 
+			-command => sub {&command_text},
+			-image => $ui{"fonts.png"},
+			-accelerator => 't',
+			-compound => "left",
+		],
+	]
+);
 
-sub refresh_menu {
+$menubar->Cascade(-label => $lang{m_packs}, -menuitems =>
+	[
+		[Button => $lang{m_add}, 
+			-command => sub {	&command_add_package },
+			-image => $ui{"edit_add.png"},
+			-accelerator => 'Control-a',
+			-compound => "left",
+		],
+		[Button => $lang{m_delete}, 
+			-command => sub { &command_delete_package() },
+			-image => $ui{"edit_remove.png"},
+			-accelerator => 'Control-d',
+			-compound => "left",
+		],
+	]
+);
+
+$menubar->Separator();
+
+$menubar->Cascade(-label => $lang{m_help}, -menuitems =>
+	[
+		[Button => $lang{m_manual}, 
+			-command => sub { 
+				&command_prompt(
+				-text => $lang{i_manual}
+				)
+			},
+			-image => $ui{"help.png"},
+			-hidemargin => 1,
+			-compound => "left",
+		],
+		[Button => $lang{m_about}, 
+			-command => sub { 
+				&command_prompt(
+					-text => $lang{i_about}
+					
+				) 
+			},
+			-image => $ui{"messagebox_info.png"},
+			-compound => "left",
+		],
+	]
+);
+
+# Recents menu
+sub update_recents_menu {
+	foreach(@recents) {
+		$recentsmenu->delete(0);
+	}
+
 	@recents = RecentsList::load($recentsfile);
-	display_menu();
+	
+	foreach(@recents) {
+		$recentsmenu->Command(
+			-label => $_,
+			-command => [ sub { &command_open_file }, $_, 0 ]
+		);
+	}
 }
+
+update_recents_menu();
 
 #==================================================================================#
 
@@ -392,7 +419,7 @@ sub command_close_tab {
 }
 
 sub command_open_file {
-	my $file = shift;
+	my ($file, $is_template) = @_;
 	
 	my $editor = $tabber->raised_widget;
 	foreach my $page ($tabber->pages) {
@@ -413,8 +440,10 @@ sub command_open_file {
 	&msg($lang{"i_done"} . " [". localtime() ."]", 1);
 	$editor->eventGenerate("<ButtonRelease-1>");
 	
-	RecentsList::push_front($file, $recentsfile, $recentslimit);
-	refresh_menu();
+	if (!$is_template) {
+		RecentsList::push_front($file, $recentsfile, $recentslimit);
+		update_recents_menu();
+	}
 }
 
 sub command_open_map { 
