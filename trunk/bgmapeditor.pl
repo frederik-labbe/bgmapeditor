@@ -105,8 +105,6 @@ close(LANG);
 
 $cfg{area} = "" unless $cfg{area};
 
-my $recentslimit = $cfg{recents_limit};
-
 #==================================================================================#
 
 # Options générales du GUI
@@ -136,7 +134,8 @@ foreach (@uiimages) {
 } 
 
 # recent files
-my @recents = RecentsList::load($recentsfile);
+my @recents;
+my $recentslimit = $cfg{recents_limit};
 
 # templates
 opendir my $templatesdir, $execpath."templates";
@@ -169,12 +168,12 @@ $menubar->Cascade(-label => $lang{m_file}, -menuitems =>
 			-accelerator => 'Control-o',
 			-compound => "left",
 		],
-		[Cascade => "Recents",
+		[Cascade => $lang{m_recents},
 			-image => $ui{"fileopen.png"},
 			-compound => "left",
 			-menu => $recentsmenu
 		],
-		[Cascade => "Templates",
+		[Cascade => $lang{m_templates},
 			-image => $ui{"fileopen.png"},
 			-compound => "left",
 			-menuitems => @templates ?
@@ -323,9 +322,12 @@ $menubar->Cascade(-label => $lang{m_help}, -menuitems =>
 );
 
 # Recents menu
+
 sub update_recents_menu {
-	foreach(@recents) {
-		$recentsmenu->delete(0);
+	if (@recents) {
+		foreach(@recents) {
+			$recentsmenu->delete(0);
+		}
 	}
 
 	@recents = RecentsList::load($recentsfile);
