@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=BG Map Editor
+Comment=Open source editor for boardgames such as Zombicide, Space Hulk and other dungeon crawlers and games with modular boards.
+Exec=/path/to/trunk/bgmapeditor.pl
+Icon=/path/to/trunk/favicon.png
+Terminal=false
+Type=Application
+Categories=Utility;Game;

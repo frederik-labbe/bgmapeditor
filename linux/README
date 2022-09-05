@@ -1,0 +1,4 @@
+To create a shortcut:
+- Open the file bgmapeditor.desktop.
+- Change the "path/to/trunk" occurences to the actual path of your trunk folder.
+- Put the file in /usr/shared/applications folder.
